@@ -18,17 +18,25 @@ def hello_world():
 def todos_api(todo_id):
     method = request.method.upper()
     body = None
+    status_code = 200
     
     if method == 'GET':
         body = get_todos(todo_id)
+        
+        if body is None:
+            status_code = 404
+    
     elif method == 'POST':
         body = save_todo(request.json)
     elif method == 'PUT':
         body = update_todo(todo_id, request.json)
+    elif method == 'DELETE':
+        body = delete_todo(todo_id)
     else:
         body = {'error': 'no method found'}
     
     resp = make_response(json.dumps(body, default=json_util.default))
+    resp.status_code = status_code
     resp.mimetype = 'application/json'
     
     return resp
@@ -36,6 +44,9 @@ def todos_api(todo_id):
 def get_todos(todo_id):
     todos = get_collection()
     todo = todos.find_one({'_id': ObjectId(todo_id)})
+    
+    if todo is None:
+        return None
     
     todo['id'] = str(todo['_id'])
     del todo['_id']
@@ -53,7 +64,9 @@ def update_todo(todo_id, data):
     return {'message': 'OK'}
 
 def delete_todo(todo_id):
-    return {}
+    todos = get_collection()
+    todos.remove(ObjectId(todo_id))
+    return {'message': 'OK'}
 
 def get_collection():
     conn = pymongo.Connection('localhost', 27017)
