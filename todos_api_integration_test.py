@@ -15,8 +15,8 @@ def start_server():
     app.debug = False
     app.run(port=port)
 
-def post(path, data):
-    return requests.post(url + path, data=json.dumps(data), 
+def send_data(method, path, data):
+    return requests.request(method, url + path, data=json.dumps(data), 
         headers={'Content-Type': 'application/json'})
 
 class TodoApiIntegrationTest(unittest.TestCase):
@@ -35,10 +35,17 @@ class TodoApiIntegrationTest(unittest.TestCase):
     def tearDown(self):
         self.conn[db_name].drop_collection('todos')
     
+    def test_invalid_method_should_return_not_allowed(self):
+        resp = requests.request('put', url + '/todos/')
+        
+        self.assertEqual(405, resp.status_code)
+    
     def test_create_todo(self):
-        resp = post('/todos/', {'text': 'foo', 'order': 1, 'done': False})
+        resp = send_data('post','/todos/', {'text': 'foo', 'order': 1, 'done': False})
         
         self.assertEqual(200, resp.status_code)
+        
+        print resp.content
         
         data = json.loads(resp.content)
         
@@ -50,7 +57,7 @@ class TodoApiIntegrationTest(unittest.TestCase):
     
     def test_get_todo(self):
         todo = {'text': 'foo', 'order': 1, 'done': False}
-        create_resp = post('/todos/', todo)
+        create_resp = send_data('post', '/todos/', todo)
         _id = json.loads(create_resp.content)['id']
         
         resp = requests.get(url + '/todos/' + _id)
@@ -62,4 +69,22 @@ class TodoApiIntegrationTest(unittest.TestCase):
         self.assertEqual(data['text'], todo['text'])
         self.assertEqual(data['order'], todo['order'])
         self.assertEqual(data['done'], todo['done'])
-
+    
+    def test_update_todo(self):
+        todo = {'text': 'foo', 'order': 1, 'done': False}
+        create_resp = send_data('post','/todos/', todo)
+        
+        _id = json.loads(create_resp.content)['id']
+        
+        todo['text'] = 'bar'
+        
+        update_resp = send_data('put', '/todos/' + _id, todo)
+        
+        self.assertEqual(200, update_resp.status_code)
+        
+        resp = requests.get(url + '/todos/' + _id)
+        data = json.loads(resp.content)
+        
+        self.assertEqual(data['text'], todo['text'])
+        self.assertEqual(data['order'], todo['order'])
+        self.assertEqual(data['done'], todo['done'])

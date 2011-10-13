@@ -16,14 +16,17 @@ def hello_world():
 @app.route('/todos/', defaults={'todo_id': None}, methods=['GET','POST'])
 @app.route('/todos/<todo_id>',  methods=['GET','POST','PUT','DELETE'])
 def todos_api(todo_id):
-    method = request.method
+    method = request.method.upper()
     body = None
     
     if method == 'GET':
         body = get_todos(todo_id)
-    
-    if method == 'POST':
+    elif method == 'POST':
         body = save_todo(request.json)
+    elif method == 'PUT':
+        body = update_todo(todo_id, request.json)
+    else:
+        body = {'error': 'no method found'}
     
     resp = make_response(json.dumps(body, default=json_util.default))
     resp.mimetype = 'application/json'
@@ -44,11 +47,13 @@ def save_todo(data):
     oid = todos.insert(data)
     return {'id': str(oid)}
 
-def update_todo():
-    pass
+def update_todo(todo_id, data):
+    todos = get_collection()
+    todos.update({'_id': ObjectId(todo_id)}, {'$set': data})
+    return {'message': 'OK'}
 
 def delete_todo(todo_id):
-    pass
+    return {}
 
 def get_collection():
     conn = pymongo.Connection('localhost', 27017)
