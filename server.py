@@ -52,7 +52,8 @@ def delete_todo(todo_id):
 
 def get_collection():
     conn = pymongo.Connection('localhost', 27017)
-    return conn.todos_db.todos
+    return conn[app.db_name].todos
 
 if __name__ == '__main__':
+    app.db_name = 'todos_prod'
     app.run(host='0.0.0.0')
