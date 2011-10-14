@@ -12,7 +12,7 @@ def hello_world():
     return render_template('index.html')
 
 @app.route('/todos/', defaults={'todo_id': None}, methods=['GET','POST'])
-@app.route('/todos/<todo_id>',  methods=['GET','DELETE'])
+@app.route('/todos/<todo_id>',  methods=['GET'])
 def todos_api(todo_id):
     method = request.method.upper()
     body = None
@@ -30,8 +30,6 @@ def todos_api(todo_id):
         if body is None:
             status_code = 404
     
-    elif method == 'DELETE':
-        body = delete_todo(todo_id)
     else:
         body = {'error': 'no method found'}
     
@@ -54,19 +52,20 @@ def save_todo():
     data = request.json
     todos = get_collection()
     oid = todos.insert(data)
-    return make_json_response({'id': str(oid)}, 200)
+    return make_json_response({'id': str(oid)})
 
 @app.route('/todos/<todo_id>',  methods=['PUT'])
 def update_todo(todo_id):
     data = request.json
     todos = get_collection()
     todos.update({'_id': ObjectId(todo_id)}, {'$set': data})
-    return make_json_response({'message': 'OK'}, 200)
+    return make_json_response({'message': 'OK'})
 
+@app.route('/todos/<todo_id>',  methods=['DELETE'])
 def delete_todo(todo_id):
     todos = get_collection()
-    todos.remove(todo_id)
-    return {'message': 'OK'}
+    todos.remove(ObjectId(todo_id))
+    return make_json_response({'message': 'OK'})
 
 def get_collection():
     conn = pymongo.Connection('localhost', 27017)
