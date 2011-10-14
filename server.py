@@ -1,9 +1,7 @@
-import json
 import pymongo
 from bson.objectid import ObjectId
-from bson import json_util
-
-from flask import Flask, render_template, request, make_response
+from flask import Flask, render_template, request
+from util import make_json_response
 
 app = Flask(__name__)
 
@@ -14,7 +12,7 @@ def hello_world():
     return render_template('index.html')
 
 @app.route('/todos/', defaults={'todo_id': None}, methods=['GET','POST'])
-@app.route('/todos/<todo_id>',  methods=['GET','POST','PUT','DELETE'])
+@app.route('/todos/<todo_id>',  methods=['GET','PUT','DELETE'])
 def todos_api(todo_id):
     method = request.method.upper()
     body = None
@@ -24,10 +22,7 @@ def todos_api(todo_id):
         try:
             todo_id = ObjectId(todo_id)
         except:
-            resp = make_response(json.dumps({'message': 'bad id'}, default=json_util.default))
-            resp.status_code = 400
-            resp.mimetype = 'application/json'
-            return resp
+            return make_json_response({'message': 'bad id'}, 400)
     
     if method == 'GET':
         body = get_todos(todo_id)
@@ -35,8 +30,6 @@ def todos_api(todo_id):
         if body is None:
             status_code = 404
     
-    elif method == 'POST':
-        body = save_todo(request.json)
     elif method == 'PUT':
         body = update_todo(todo_id, request.json)
     elif method == 'DELETE':
@@ -44,11 +37,7 @@ def todos_api(todo_id):
     else:
         body = {'error': 'no method found'}
     
-    resp = make_response(json.dumps(body, default=json_util.default))
-    resp.status_code = status_code
-    resp.mimetype = 'application/json'
-    
-    return resp
+    return make_json_response(body, status_code)
 
 def get_todos(todo_id):
     todos = get_collection()
@@ -62,10 +51,12 @@ def get_todos(todo_id):
     
     return todo
 
-def save_todo(data):
+@app.route('/todos/', methods=['POST'])
+def save_todo():
+    data = request.json
     todos = get_collection()
     oid = todos.insert(data)
-    return {'id': str(oid)}
+    return make_json_response({'id': str(oid)}, 200)
 
 def update_todo(todo_id, data):
     todos = get_collection()
