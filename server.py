@@ -20,6 +20,15 @@ def todos_api(todo_id):
     body = None
     status_code = 200
     
+    if todo_id is not None:
+        try:
+            todo_id = ObjectId(todo_id)
+        except:
+            resp = make_response(json.dumps({'message': 'bad id'}, default=json_util.default))
+            resp.status_code = 400
+            resp.mimetype = 'application/json'
+            return resp
+    
     if method == 'GET':
         body = get_todos(todo_id)
         
@@ -43,7 +52,7 @@ def todos_api(todo_id):
 
 def get_todos(todo_id):
     todos = get_collection()
-    todo = todos.find_one({'_id': ObjectId(todo_id)})
+    todo = todos.find_one({'_id': todo_id})
     
     if todo is None:
         return None
@@ -60,12 +69,12 @@ def save_todo(data):
 
 def update_todo(todo_id, data):
     todos = get_collection()
-    todos.update({'_id': ObjectId(todo_id)}, {'$set': data})
+    todos.update({'_id': todo_id}, {'$set': data})
     return {'message': 'OK'}
 
 def delete_todo(todo_id):
     todos = get_collection()
-    todos.remove(ObjectId(todo_id))
+    todos.remove(todo_id)
     return {'message': 'OK'}
 
 def get_collection():

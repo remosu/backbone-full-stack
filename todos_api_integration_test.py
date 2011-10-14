@@ -103,10 +103,10 @@ class TodoApiIntegrationTest(unittest.TestCase):
         
         self.assertEqual(404, resp.status_code)
     
-    def test_that_invalid_todo_id_should_return_404(self):
+    def test_that_invalid_todo_id_should_return_400(self):
         resp = requests.get(url + '/todos/123')
         
-        self.assertEqual(404, resp.status_code)
+        self.assertEqual(400, resp.status_code)
     
     def test_invalid_method_should_return_not_allowed(self):
         resp = requests.request('put', url + '/todos/')
