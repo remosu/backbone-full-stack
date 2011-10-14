@@ -11,6 +11,19 @@ app.debug = True
 def index():
     return render_template('index.html')
 
+@app.route('/todos/', methods=['GET'])
+def get_todos():
+    todos = get_collection()
+    cur = todos.find()
+    data = []
+    
+    for todo in cur:
+        todo['id'] = str(todo['_id'])
+        del todo['_id']
+        data.append(todo)
+    
+    return make_json_response(data)
+
 @app.route('/todos/<todo_id>',  methods=['GET'])
 def get_todo(todo_id):
     oid = None

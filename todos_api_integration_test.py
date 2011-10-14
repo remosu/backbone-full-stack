@@ -50,6 +50,23 @@ class TodoApiIntegrationTest(unittest.TestCase):
         
         self.assertEqual('foo', todo['text'])
     
+    def test_get_all_todos(self):
+        send_data('post','/todos/', {'text': 'foo', 'order': 1, 'done': False})
+        send_data('post','/todos/', {'text': 'bar', 'order': 2, 'done': False})
+        send_data('post','/todos/', {'text': 'baz', 'order': 3, 'done': False})
+        
+        resp = requests.get(url + '/todos/')
+        
+        self.assertEqual(200, resp.status_code)
+        
+        data = json.loads(resp.content)
+        
+        self.assertEqual(3, len(data))
+        
+        for todo in data:
+            self.assertIn('id', todo)
+            self.assertIsNotNone(todo['id'])
+    
     def test_get_todo(self):
         todo = {'text': 'foo', 'order': 1, 'done': False}
         create_resp = send_data('post', '/todos/', todo)
@@ -61,6 +78,7 @@ class TodoApiIntegrationTest(unittest.TestCase):
         
         data = json.loads(resp.content)
         
+        self.assertEqual(_id, data['id'])
         self.assertEqual(data['text'], todo['text'])
         self.assertEqual(data['order'], todo['order'])
         self.assertEqual(data['done'], todo['done'])
