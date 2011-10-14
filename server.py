@@ -1,54 +1,38 @@
 import pymongo
 from bson.objectid import ObjectId
 from flask import Flask, render_template, request
-from util import make_json_response
+from util import make_json_response, bad_id_response
 
 app = Flask(__name__)
 
 app.debug = True
 
 @app.route('/')
-def hello_world():
+def index():
     return render_template('index.html')
 
-@app.route('/todos/', defaults={'todo_id': None}, methods=['GET','POST'])
 @app.route('/todos/<todo_id>',  methods=['GET'])
-def todos_api(todo_id):
-    method = request.method.upper()
-    body = None
-    status_code = 200
+def get_todo(todo_id):
+    oid = None
     
-    if todo_id is not None:
-        try:
-            todo_id = ObjectId(todo_id)
-        except:
-            return make_json_response({'message': 'bad id'}, 400)
+    try:
+        oid = ObjectId(todo_id)
+    except:
+        return bad_id_response()
     
-    if method == 'GET':
-        body = get_todos(todo_id)
-        
-        if body is None:
-            status_code = 404
-    
-    else:
-        body = {'error': 'no method found'}
-    
-    return make_json_response(body, status_code)
-
-def get_todos(todo_id):
     todos = get_collection()
-    todo = todos.find_one({'_id': todo_id})
+    todo = todos.find_one({'_id': oid})
     
     if todo is None:
-        return None
+        return make_json_response({'message': 'no todo with id: ' + todo_id}, 404)
     
     todo['id'] = str(todo['_id'])
     del todo['_id']
     
-    return todo
+    return make_json_response(todo)
 
 @app.route('/todos/', methods=['POST'])
-def save_todo():
+def create_todo():
     data = request.json
     todos = get_collection()
     oid = todos.insert(data)
