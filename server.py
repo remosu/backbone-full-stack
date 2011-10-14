@@ -12,7 +12,7 @@ def hello_world():
     return render_template('index.html')
 
 @app.route('/todos/', defaults={'todo_id': None}, methods=['GET','POST'])
-@app.route('/todos/<todo_id>',  methods=['GET','PUT','DELETE'])
+@app.route('/todos/<todo_id>',  methods=['GET','DELETE'])
 def todos_api(todo_id):
     method = request.method.upper()
     body = None
@@ -30,8 +30,6 @@ def todos_api(todo_id):
         if body is None:
             status_code = 404
     
-    elif method == 'PUT':
-        body = update_todo(todo_id, request.json)
     elif method == 'DELETE':
         body = delete_todo(todo_id)
     else:
@@ -58,10 +56,12 @@ def save_todo():
     oid = todos.insert(data)
     return make_json_response({'id': str(oid)}, 200)
 
-def update_todo(todo_id, data):
+@app.route('/todos/<todo_id>',  methods=['PUT'])
+def update_todo(todo_id):
+    data = request.json
     todos = get_collection()
-    todos.update({'_id': todo_id}, {'$set': data})
-    return {'message': 'OK'}
+    todos.update({'_id': ObjectId(todo_id)}, {'$set': data})
+    return make_json_response({'message': 'OK'}, 200)
 
 def delete_todo(todo_id):
     todos = get_collection()
