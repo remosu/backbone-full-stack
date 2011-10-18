@@ -36,19 +36,24 @@ class TodoApiIntegrationTest(unittest.TestCase):
         self.conn[db_name].drop_collection('todos')
     
     def test_create_todo(self):
-        resp = send_data('post','/todos/', {'text': 'foo', 'order': 1, 'done': False})
+        expected_todo = {'text': 'foo', 'order': 1, 'done': False}
+        
+        resp = send_data('post','/todos/', expected_todo)
         
         self.assertEqual(200, resp.status_code)
         
-        print resp.content
+        actual_todo = json.loads(resp.content)
         
-        data = json.loads(resp.content)
+        self.assertIn('id', actual_todo)
         
-        self.assertIn('id', data)
+        _id = actual_todo['id']
+        del actual_todo['id']
         
-        todo = self.conn[db_name].todos.find_one({'_id': ObjectId(data['id'])})
+        self.assertEqual(expected_todo, actual_todo)
         
-        self.assertEqual('foo', todo['text'])
+        todo = self.conn[db_name].todos.find_one({'_id': ObjectId(_id)})
+        
+        self.assertIsNotNone(todo)
     
     def test_get_all_todos(self):
         send_data('post','/todos/', {'text': 'foo', 'order': 1, 'done': False})

@@ -49,7 +49,10 @@ def create_todo():
     data = request.json
     todos = get_collection()
     oid = todos.insert(data)
-    return make_json_response({'id': str(oid)})
+    todo = todos.find_one({'_id': ObjectId(oid)})
+    todo['id'] = str(todo['_id'])
+    del todo['_id']
+    return make_json_response(todo)
 
 @app.route('/todos/<todo_id>',  methods=['PUT'])
 def update_todo(todo_id):
