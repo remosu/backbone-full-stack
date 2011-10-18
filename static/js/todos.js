@@ -1,227 +1,172 @@
-// An example Backbone application contributed by
-// [Jérôme Gravel-Niquet](http://jgn.me/). This demo uses a simple
-// [LocalStorage adapter](backbone-localstorage.html)
-// to persist Backbone models within your browser.
+// Based on the Todo example backbone app by [Jérôme Gravel-Niquet](http://jgn.me/).
 
 (function() {
 
-    // Todo Model
-    // ----------
-
-    // Our basic **Todo** model has `text`, `order`, and `done` attributes.
     var Todo = Backbone.Model.extend({
 
-        // Default attributes for a todo item.
         defaults: function() {
             return {
+                text: '',
                 done:  false,
-                order: Todos.nextOrder()
+                order: 0
             };
         },
 
-        // Toggle the `done` state of this todo item.
         toggle: function() {
             this.save({done: !this.get("done")});
         }
 
     });
 
-    // Todo Collection
-    // ---------------
-
-    // The collection of todos is backed by *localStorage* instead of a remote
-    // server.
     var TodoList = Backbone.Collection.extend({
 
-        // Reference to this collection's model.
         model: Todo,
         
         url: '/todos/',
 
-        // Filter down the list of all todo items that are finished.
         done: function() {
             return this.filter(function(todo) { return todo.get('done'); });
         },
 
-        // Filter down the list to only todo items that are still not finished.
         remaining: function() {
             return this.without.apply(this, this.done());
         },
-
-        // We keep the Todos in sequential order, despite being saved by unordered
-        // GUID in the database. This generates the next order number for new items.
+        
         nextOrder: function() {
-            if (!this.length) return 1;
+            if (!this.length) { 
+                return 1; 
+            }
+            
             return this.last().get('order') + 1;
         },
 
-        // Todos are sorted by their original insertion order.
         comparator: function(todo) {
             return todo.get('order');
         }
 
     });
 
-  // Create our global collection of **Todos**.
-  var Todos = new TodoList();
+    var TodoView = Backbone.View.extend({
 
-  // Todo Item View
-  // --------------
+        tagName:  "li",
 
-  // The DOM element for a todo item...
-  var TodoView = Backbone.View.extend({
+        template: _.template($('#item-template').html()),
 
-    //... is a list tag.
-    tagName:  "li",
+        events: {
+            "click .check"              : "toggleDone",
+            "dblclick div.todo-text"    : "edit",
+            "click span.todo-destroy"   : "clear",
+            "keypress .todo-input"      : "updateOnEnter"
+        },
 
-    // Cache the template function for a single item.
-    template: _.template($('#item-template').html()),
+        initialize: function() {
+            this.model.bind('change', this.render, this);
+            this.model.bind('destroy', this.remove, this);
+        },
 
-    // The DOM events specific to an item.
-    events: {
-      "click .check"              : "toggleDone",
-      "dblclick div.todo-text"    : "edit",
-      "click span.todo-destroy"   : "clear",
-      "keypress .todo-input"      : "updateOnEnter"
-    },
+        render: function() {
+            $(this.el).html(this.template(this.model.toJSON()));
+            this.setText();
+            return this;
+        },
 
-    // The TodoView listens for changes to its model, re-rendering.
-    initialize: function() {
-      this.model.bind('change', this.render, this);
-      this.model.bind('destroy', this.remove, this);
-    },
+        setText: function() {
+            var text = this.model.get('text');
+            this.$('.todo-text').text(text);
+            this.input = this.$('.todo-input');
+            this.input.bind('blur', _.bind(this.close, this)).val(text);
+        },
 
-    // Re-render the contents of the todo item.
-    render: function() {
-      $(this.el).html(this.template(this.model.toJSON()));
-      this.setText();
-      return this;
-    },
+        toggleDone: function() {
+            this.model.toggle();
+        },
 
-    // To avoid XSS (not that it would be harmful in this particular app),
-    // we use `jQuery.text` to set the contents of the todo item.
-    setText: function() {
-      var text = this.model.get('text');
-      this.$('.todo-text').text(text);
-      this.input = this.$('.todo-input');
-      this.input.bind('blur', _.bind(this.close, this)).val(text);
-    },
+        edit: function() {
+            $(this.el).addClass("editing");
+            this.input.focus();
+        },
 
-    // Toggle the `"done"` state of the model.
-    toggleDone: function() {
-      this.model.toggle();
-    },
+        close: function() {
+            this.model.save({text: this.input.val()});
+            $(this.el).removeClass("editing");
+        },
 
-    // Switch this view into `"editing"` mode, displaying the input field.
-    edit: function() {
-      $(this.el).addClass("editing");
-      this.input.focus();
-    },
+        updateOnEnter: function(e) {
+            if (e.keyCode == 13) this.close();
+        },
 
-    // Close the `"editing"` mode, saving changes to the todo.
-    close: function() {
-      this.model.save({text: this.input.val()});
-      $(this.el).removeClass("editing");
-    },
+        remove: function() {
+            $(this.el).remove();
+        },
 
-    // If you hit `enter`, we're through editing the item.
-    updateOnEnter: function(e) {
-      if (e.keyCode == 13) this.close();
-    },
+        clear: function() {
+            this.model.destroy();
+        }
 
-    // Remove this view from the DOM.
-    remove: function() {
-      $(this.el).remove();
-    },
+    });
 
-    // Remove the item, destroy the model.
-    clear: function() {
-      this.model.destroy();
-    }
+    window.TodoApp = Backbone.View.extend({
 
-  });
+        el: $("#todoapp"),
+        
+        todos: new TodoList(),
 
-  // The Application
-  // ---------------
+        statsTemplate: _.template($('#stats-template').html()),
 
-  // Our overall **AppView** is the top-level piece of UI.
-  window.TodoApp = Backbone.View.extend({
+        events: {
+            "keypress #new-todo":  "createOnEnter",
+            "keyup #new-todo":     "showTooltip",
+            "click .todo-clear a": "clearCompleted"
+        },
 
-    // Instead of generating a new element, bind to the existing skeleton of
-    // the App already present in the HTML.
-    el: $("#todoapp"),
+        initialize: function() {
+            this.input    = this.$("#new-todo");
 
-    // Our template for the line of statistics at the bottom of the app.
-    statsTemplate: _.template($('#stats-template').html()),
+            this.todos.bind('add',   this.addOne, this);
+            this.todos.bind('reset', this.addAll, this);
+            this.todos.bind('all',   this.render, this);
 
-    // Delegated events for creating new items, and clearing completed ones.
-    events: {
-      "keypress #new-todo":  "createOnEnter",
-      "keyup #new-todo":     "showTooltip",
-      "click .todo-clear a": "clearCompleted"
-    },
+            this.todos.fetch();
+        },
 
-    // At initialization we bind to the relevant events on the `Todos`
-    // collection, when items are added or changed. Kick things off by
-    // loading any preexisting todos that might be saved in *localStorage*.
-    initialize: function() {
-      this.input    = this.$("#new-todo");
+        render: function() {
+            this.$('#todo-stats').html(this.statsTemplate({
+                total:      this.todos.length,
+                done:       this.todos.done().length,
+                remaining:  this.todos.remaining().length
+            }));
+        },
 
-      Todos.bind('add',   this.addOne, this);
-      Todos.bind('reset', this.addAll, this);
-      Todos.bind('all',   this.render, this);
+        addOne: function(todo) {
+            var view = new TodoView({model: todo});
+            this.$("#todo-list").append(view.render().el);
+        },
 
-      Todos.fetch();
-    },
+        addAll: function() {
+            this.todos.each(this.addOne);
+        },
 
-    // Re-rendering the App just means refreshing the statistics -- the rest
-    // of the app doesn't change.
-    render: function() {
-      this.$('#todo-stats').html(this.statsTemplate({
-        total:      Todos.length,
-        done:       Todos.done().length,
-        remaining:  Todos.remaining().length
-      }));
-    },
+        createOnEnter: function(e) {
+            var text = this.input.val();
+            if (!text || e.keyCode != 13) return;
+            this.todos.create({text: text});
+            this.input.val('');
+        },
 
-    // Add a single todo item to the list by creating a view for it, and
-    // appending its element to the `<ul>`.
-    addOne: function(todo) {
-      var view = new TodoView({model: todo});
-      this.$("#todo-list").append(view.render().el);
-    },
+        clearCompleted: function() {
+            _.each(this.todos.done(), function(todo){ todo.destroy(); });
+            return false;
+        },
 
-    // Add all items in the **Todos** collection at once.
-    addAll: function() {
-      Todos.each(this.addOne);
-    },
-
-    // If you hit return in the main input field, and there is text to save,
-    // create new **Todo** model persisting it to *localStorage*.
-    createOnEnter: function(e) {
-      var text = this.input.val();
-      if (!text || e.keyCode != 13) return;
-      Todos.create({text: text});
-      this.input.val('');
-    },
-
-    // Clear all done todo items, destroying their models.
-    clearCompleted: function() {
-      _.each(Todos.done(), function(todo){ todo.destroy(); });
-      return false;
-    },
-
-    // Lazily show the tooltip that tells you to press `enter` to save
-    // a new todo item, after one second.
-    showTooltip: function(e) {
-      var tooltip = this.$(".ui-tooltip-top");
-      var val = this.input.val();
-      tooltip.fadeOut();
-      if (this.tooltipTimeout) clearTimeout(this.tooltipTimeout);
-      if (val == '' || val == this.input.attr('placeholder')) return;
-      var show = function(){ tooltip.show().fadeIn(); };
-      this.tooltipTimeout = _.delay(show, 1000);
-    }
-
-  });
+        showTooltip: function(e) {
+            var tooltip = this.$(".ui-tooltip-top");
+            var val = this.input.val();
+            tooltip.fadeOut();
+            if (this.tooltipTimeout) clearTimeout(this.tooltipTimeout);
+            if (val == '' || val == this.input.attr('placeholder')) return;
+            var show = function(){ tooltip.show().fadeIn(); };
+            this.tooltipTimeout = _.delay(show, 1000);
+        }
+        
+    });
 }());
