@@ -4,7 +4,7 @@ import unittest
 from pymongo import Connection
 from bson.objectid import ObjectId
 from multiprocessing import Process
-from server import app
+from app.server import app
 
 port = 5001
 url = 'http://localhost:%s' % port
