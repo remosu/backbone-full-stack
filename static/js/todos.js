@@ -120,7 +120,7 @@
         },
 
         initialize: function() {
-            this.input    = this.$("#new-todo");
+            this.input = this.$("#new-todo");
 
             this.todos.bind('add',   this.addOne, this);
             this.todos.bind('reset', this.addAll, this);
@@ -148,8 +148,12 @@
 
         createOnEnter: function(e) {
             var text = this.input.val();
-            if (!text || e.keyCode != 13) return;
-            this.todos.create({text: text});
+            
+            if (!text || e.keyCode != 13) {
+                return;
+            }
+            
+            this.todos.create({text: text, order: this.todos.nextOrder()});
             this.input.val('');
         },
 
