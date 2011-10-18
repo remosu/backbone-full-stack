@@ -14,7 +14,7 @@ def index():
 @app.route('/todos/', methods=['GET'])
 def get_todos():
     todos = get_collection()
-    cur = todos.find()
+    cur = todos.find().sort('order', pymongo.ASCENDING)
     data = []
     
     for todo in cur:

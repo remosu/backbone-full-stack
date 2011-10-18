@@ -56,9 +56,9 @@ class TodoApiIntegrationTest(unittest.TestCase):
         self.assertIsNotNone(todo)
     
     def test_get_all_todos(self):
-        send_data('post','/todos/', {'text': 'foo', 'order': 1, 'done': False})
-        send_data('post','/todos/', {'text': 'bar', 'order': 2, 'done': False})
-        send_data('post','/todos/', {'text': 'baz', 'order': 3, 'done': False})
+        send_data('post','/todos/', {'text': 'foo', 'order': 3, 'done': False})
+        send_data('post','/todos/', {'text': 'bar', 'order': 1, 'done': False})
+        send_data('post','/todos/', {'text': 'baz', 'order': 2, 'done': False})
         
         resp = requests.get(url + '/todos/')
         
@@ -68,9 +68,13 @@ class TodoApiIntegrationTest(unittest.TestCase):
         
         self.assertEqual(3, len(data))
         
+        last_order = 0
+        
         for todo in data:
             self.assertIn('id', todo)
             self.assertIsNotNone(todo['id'])
+            self.assertGreater(todo['order'], last_order)
+            last_order = todo['order']
     
     def test_get_todo(self):
         todo = {'text': 'foo', 'order': 1, 'done': False}
