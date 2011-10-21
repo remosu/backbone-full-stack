@@ -11,6 +11,7 @@ url = 'http://localhost:%s' % port
 db_name = 'todos_test'
 
 def start_server():
+    app.conn_args = {}
     app.db_name = db_name
     app.debug = False
     app.run(port=port)

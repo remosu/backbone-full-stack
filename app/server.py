@@ -68,9 +68,20 @@ def delete_todo(todo_id):
     return make_json_response({'message': 'OK'})
 
 def get_collection():
-    conn = pymongo.Connection('localhost', 27017)
+    conn = pymongo.Connection('localhost:27017', **app.conn_args)
     return conn[app.db_name].todos
 
 if __name__ == '__main__':
+    import optparse
+    parser = optparse.OptionParser()
+    parser.add_option('-r', '--replicaset', dest='replicaset', help='Define replicaset name to connect to.')
+    
+    options, args = parser.parse_args()
+    
+    if options.replicaset is not None:
+        app.conn_args = {'replicaset': options.replicaset, 'slave_okay': True}
+    else:
+        app.conn_args = {}
+    
     app.db_name = 'todos_prod'
     app.run(host='0.0.0.0')
