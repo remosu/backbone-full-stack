@@ -3,9 +3,7 @@
 <head>
     <title>Backbone Demo: Todos</title>
     <link href="/static/css/todos.css" media="all" rel="stylesheet" type="text/css"/>
-    <script src="/static/js/jquery-1.6.4.js"></script>
-    <script src="/static/js/underscore.js"></script>
-    <script src="/static/js/backbone.js"></script>
+    <script data-main="/static/js/main" src="/static/js/ext/require.js"></script>
 </head>
 <body>
     <div id="todoapp">
@@ -55,14 +53,6 @@
         </a>
     </span>
     <% } %>
-    </script>
-    
-    <script src="/static/js/todos.js"></script>
-    
-    <script type="text/javascript">
-    $(document).ready(function() {
-        window.App = new TodoApp();
-    });
     </script>
 </body>
 </html>
