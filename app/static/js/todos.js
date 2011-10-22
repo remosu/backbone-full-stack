@@ -111,8 +111,6 @@
         
         todos: new TodoList(),
 
-        statsTemplate: _.template($('#stats-template').html()),
-
         events: {
             "keypress #new-todo":  "createOnEnter",
             "keyup #new-todo":     "showTooltip",
@@ -130,11 +128,25 @@
         },
 
         render: function() {
-            this.$('#todo-stats').html(this.statsTemplate({
-                total:      this.todos.length,
-                done:       this.todos.done().length,
-                remaining:  this.todos.remaining().length
-            }));
+            var self = this;
+            
+            if (!self.statsTemplate) {
+                $.get('/static/templates/stats.html', function(data) {
+                    self.statsTemplate = _.template(data);
+                    
+                    self.$('#todo-stats').html(self.statsTemplate({
+                        total:      self.todos.length,
+                        done:       self.todos.done().length,
+                        remaining:  self.todos.remaining().length
+                    }));
+                });
+            } else {
+                this.$('#todo-stats').html(this.statsTemplate({
+                    total:      this.todos.length,
+                    done:       this.todos.done().length,
+                    remaining:  this.todos.remaining().length
+                }));
+            }
         },
 
         addOne: function(todo) {
