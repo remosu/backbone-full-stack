@@ -1,7 +1,7 @@
 // Based on the Todo example backbone app by [Jérôme Gravel-Niquet](http://jgn.me/).
 
 (function() {
-
+    
     var Todo = Backbone.Model.extend({
 
         defaults: function() {
@@ -50,8 +50,6 @@
 
         tagName:  "li",
 
-        template: _.template($('#item-template').html()),
-
         events: {
             "click .check"              : "toggleDone",
             "dblclick div.todo-text"    : "edit",
@@ -65,8 +63,22 @@
         },
 
         render: function() {
-            $(this.el).html(this.template(this.model.toJSON()));
-            this.setText();
+            var self = this;
+            
+            function renderTemplate() {
+                $(self.el).html(self.template(self.model.toJSON()));
+                self.setText();
+            }
+            
+            if (!self.template) {
+                $.get('/static/templates/item.html', function(data) {
+                    self.template = _.template(data);
+                    renderTemplate();
+                });
+            } else {
+                renderTemplate();
+            }
+            
             return this;
         },
 
@@ -130,22 +142,21 @@
         render: function() {
             var self = this;
             
+            function renderTemplate() {
+                self.$('#todo-stats').html(self.statsTemplate({
+                    total:      self.todos.length,
+                    done:       self.todos.done().length,
+                    remaining:  self.todos.remaining().length
+                }));
+            }
+            
             if (!self.statsTemplate) {
                 $.get('/static/templates/stats.html', function(data) {
                     self.statsTemplate = _.template(data);
-                    
-                    self.$('#todo-stats').html(self.statsTemplate({
-                        total:      self.todos.length,
-                        done:       self.todos.done().length,
-                        remaining:  self.todos.remaining().length
-                    }));
+                    renderTemplate();
                 });
             } else {
-                this.$('#todo-stats').html(this.statsTemplate({
-                    total:      this.todos.length,
-                    done:       this.todos.done().length,
-                    remaining:  this.todos.remaining().length
-                }));
+                renderTemplate();
             }
         },
 
