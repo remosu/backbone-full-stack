@@ -17,6 +17,16 @@ via jQuery.ajax.
 The app runs with a single MongoDB node, but scripts are provided to show how a replicated
 setup works as well.
 
+Setup:
+
+    virtualenv env --no-site-packages
+    source env/bin/activate
+    pip install -r requirements.txt
+    mkdir data
+    mongod --dbpath=data/ --fork --logpath=data/mongod.log
+    python app/server.py
+    http://localhost:5000/
+
 Backlog:
 
 * require.js optimizer
