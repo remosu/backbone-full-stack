@@ -1,5 +1,3 @@
-// Based on the Todo example backbone app by [Jérôme Gravel-Niquet](http://jgn.me/).
-
 (function() {
     
     var Todo = Backbone.Model.extend({
