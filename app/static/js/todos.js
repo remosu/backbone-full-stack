@@ -120,13 +120,17 @@
         },
 
         initialize: function() {
-            this.input = this.$("#new-todo");
+            var self = this;
+            
+            $('body').template('/static/templates/app.html', {}, function() {
+                self.input = self.$("#new-todo");
 
-            this.todos.bind('add',   this.addOne, this);
-            this.todos.bind('reset', this.addAll, this);
-            this.todos.bind('all',   this.render, this);
+                self.todos.bind('add',   self.addOne, self);
+                self.todos.bind('reset', self.addAll, self);
+                self.todos.bind('all',   self.render, self);
 
-            this.todos.fetch();
+                self.todos.fetch();
+            });
         },
 
         render: function() {
