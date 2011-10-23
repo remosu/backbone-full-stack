@@ -65,19 +65,9 @@
         render: function() {
             var self = this;
             
-            function renderTemplate() {
-                $(self.el).html(self.template(self.model.toJSON()));
+            $(self.el).template('/static/templates/item.html', self.model.toJSON(), function() {
                 self.setText();
-            }
-            
-            if (!self.template) {
-                $.get('/static/templates/item.html', function(data) {
-                    self.template = _.template(data);
-                    renderTemplate();
-                });
-            } else {
-                renderTemplate();
-            }
+            });
             
             return this;
         },
@@ -140,24 +130,16 @@
         },
 
         render: function() {
-            var self = this;
-            
-            function renderTemplate() {
-                self.$('#todo-stats').html(self.statsTemplate({
+            var self = this,
+                data = {
                     total:      self.todos.length,
                     done:       self.todos.done().length,
                     remaining:  self.todos.remaining().length
-                }));
-            }
+                };
             
-            if (!self.statsTemplate) {
-                $.get('/static/templates/stats.html', function(data) {
-                    self.statsTemplate = _.template(data);
-                    renderTemplate();
-                });
-            } else {
-                renderTemplate();
-            }
+            $('#todo-stats').template('/static/templates/stats.html', data);
+            
+            return this;
         },
 
         addOne: function(todo) {
