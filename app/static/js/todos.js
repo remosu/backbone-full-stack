@@ -92,7 +92,7 @@
         },
 
         updateOnEnter: function(e) {
-            if (e.keyCode == 13) this.close();
+            if (e.keyCode === 13) { this.close(); }
         },
 
         remove: function() {
@@ -122,6 +122,7 @@
             parentElt.template('/static/templates/app.html', {}, function() {
                 self.el = $('#todoapp');
                 self.delegateEvents();
+                
                 self.input = self.$("#new-todo");
 
                 self.todos.bind('add',   self.addOne, self);
@@ -157,7 +158,7 @@
         createOnEnter: function(e) {
             var text = this.input.val();
             
-            if (!text || e.keyCode != 13) {
+            if (!text || e.keyCode !== 13) {
                 return;
             }
             
@@ -166,7 +167,7 @@
         },
 
         clearCompleted: function() {
-            _.each(this.todos.done(), function(todo){ todo.destroy(); });
+            _.each(this.todos.done(), function(todo) { todo.destroy(); });
             return false;
         },
 
@@ -177,9 +178,9 @@
             tooltip.fadeOut();
             
             if (this.tooltipTimeout) { clearTimeout(this.tooltipTimeout); }
-            if (val == '' || val == this.input.attr('placeholder')) { return; }
+            if (val === '' || val == this.input.attr('placeholder')) { return; }
             
-            var show = function(){ tooltip.show().fadeIn(); };
+            var show = function() { tooltip.show().fadeIn(); };
             
             this.tooltipTimeout = _.delay(show, 1000);
         }
