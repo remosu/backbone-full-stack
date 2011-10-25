@@ -106,8 +106,6 @@
     });
 
     window.TodoApp = Backbone.View.extend({
-
-        el: $("#todoapp"),
         
         todos: new TodoList(),
 
@@ -117,10 +115,13 @@
             "click .todo-clear a": "clearCompleted"
         },
 
-        initialize: function() {
-            var self = this;
+        initialize: function(options) {
+            var self = this,
+                parentElt = options.appendTo || $('body');
             
-            $('body').template('/static/templates/app.html', {}, function() {
+            parentElt.template('/static/templates/app.html', {}, function() {
+                self.el = $('#todoapp');
+                self.delegateEvents();
                 self.input = self.$("#new-todo");
 
                 self.todos.bind('add',   self.addOne, self);
