@@ -7,13 +7,17 @@
             html = template(data);
         
         elt.html(html);
-        callback(html);
+        callback();
     }
     
     /**
      * Fetches the Underscore.js template at the given path,
-     * processes it with the provided obj, and finally
-     * executes the optional callback.
+     * processes it with the provided obj, and appends the
+     * resulting html to the matched DOM elements.
+     *
+     * Templates will only be fetched once from the server,
+     * after which the preprocessed template will be cached
+     * in the DOM.
      */
     $.fn.template = function(path, obj, callback) {
         var self = this;
