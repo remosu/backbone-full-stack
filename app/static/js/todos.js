@@ -1,4 +1,5 @@
 (function() {
+    var TEMPLATE_URL = '/static';
     
     var Todo = Backbone.Model.extend({
 
@@ -63,7 +64,7 @@
         render: function() {
             var self = this;
             
-            $(self.el).template('/static/templates/item.html', self.model.toJSON(), function() {
+            $(self.el).template(TEMPLATE_URL + '/templates/item.html', self.model.toJSON(), function() {
                 self.setText();
             });
             
@@ -118,8 +119,10 @@
         initialize: function(options) {
             var self = this,
                 parentElt = options.appendTo || $('body');
+                
+            TEMPLATE_URL = options.templateUrl || TEMPLATE_URL;
             
-            parentElt.template('/static/templates/app.html', {}, function() {
+            parentElt.template(TEMPLATE_URL + '/templates/app.html', {}, function() {
                 self.el = $('#todoapp');
                 self.delegateEvents();
                 
@@ -141,7 +144,7 @@
                     remaining:  self.todos.remaining().length
                 };
             
-            $('#todo-stats').template('/static/templates/stats.html', data);
+            $('#todo-stats').template(TEMPLATE_URL + '/templates/stats.html', data);
             
             return this;
         },

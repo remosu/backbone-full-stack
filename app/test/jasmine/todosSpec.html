@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todos Spec</title>
+    
+    <link href="/jasmine/ext/jasmine.css" media="all" rel="stylesheet" type="text/css"/>
+    
+    <script type="text/javascript" src="/jasmine/ext/jasmine.js"></script>
+    <script type="text/javascript" src="/jasmine/ext/jasmine-html.js"></script>
+    
+    <script type="text/javascript" src="/static/js/ext/require.js"></script>
+    <script type="text/javascript" src="/static/js/ext/jquery.js"></script>
+    <script type="text/javascript" src="/static/js/ext/underscore.js"></script>
+    <script type="text/javascript" src="/static/js/ext/backbone.js"></script>
+    
+    <script type="text/javascript" src="/jasmine/ext/backbone.localStorage.js"></script>
+    
+    <script type="text/javascript" src="/static/js/template.js"></script>
+    <script type="text/javascript" src="/static/js/todos.js"></script>
+</head>
+<body>
+    <script type="text/javascript">
+    var reporter = new jasmine.TrivialReporter();
+    
+    describe('Todo App', function() {
+        var App;
+        
+        beforeEach(function() {
+            $('body').append('<div id="todoAppContainer"></div>');
+            App = new TodoApp({ appendTo: $('#todoAppContainer') });
+        });
+        
+        afterEach(function() {
+            $('#todoAppContainer').remove();
+        });
+        
+        it('Should bootstrap the app.', function() {
+            expect($('#todoapp')).toBeDefined();
+            
+            
+        });
+    });
+    
+    $(document).ready(function(evt) {
+            jasmine.getEnv().addReporter(reporter);
+            jasmine.getEnv().execute();
+    });
+    </script>
+</body>
+</html>
